@@ -1,0 +1,42 @@
+version: '3.8'
+services:
+  psql:
+    image: postgres:10.21
+    container_name: psql
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - 5432:5432
+    volumes: 
+      - psqldata:/var/lib/postgresql/data
+  pgadmin:
+    image: dpage/pgadmin4:6
+    container_name: pgadmin
+    env_file:
+      - ./.env
+    depends_on:
+      - psql
+    ports:
+      - 5050:5050
+  php-backend:
+    build:
+      context: ./
+      dockerfile: ./setup/php/Dockerfile
+    container_name: php-backend
+    volumes:
+      - ./source:/var/www/depota
+      - ./log:/var/log/apache2
+    ports:
+      - 8000:8000
+    links:
+      - psql
+    extra_hosts:
+      - "dev-api.hosting:127.0.0.1"
+    environment:
+      - ALLOW_OVERRIDE=true
+    depends_on:
+      - psql
+volumes:
+  psqldata:
