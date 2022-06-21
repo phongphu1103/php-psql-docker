@@ -1,5 +1,6 @@
 FROM php:7.4-apache
 
+# Install dependencies
 RUN apt-get update && apt-get install -y \
     git \
     curl \
@@ -12,6 +13,10 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip
 
+# Clear cache
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Install extensions
 RUN docker-php-ext-install pdo pdo_mysql pdo_pgsql sodium mbstring exif pcntl bcmath gd && \
     docker-php-ext-enable pdo_pgsql sodium
 
@@ -41,13 +46,19 @@ RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/Allo
 RUN echo "ServerTokens Prod\n" >> /etc/apache2/apache2.conf
 RUN echo "ServerSignature Off\n" >> /etc/apache2/apache2.conf
 
-# start Apache2 on image start
-# CMD ["/usr/sbin/apache2", "-D", "FOREGROUND"]
-CMD /usr/sbin/apache2ctl -D FOREGROUND
-
+# Install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer \
     && composer --ansi --version --no-interaction
 
-WORKDIR /var/www/depota
+# Set working directory
+WORKDIR /var/www/
 
+# Change current user to www-data
+# USER www-data
+
+# Expose port 8000
 EXPOSE 8000
+
+# start Apache2 on image start
+# CMD ["/usr/sbin/apache2", "-D", "FOREGROUND"]
+CMD /usr/sbin/apache2ctl -D FOREGROUND

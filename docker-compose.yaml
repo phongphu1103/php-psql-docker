@@ -40,3 +40,4 @@ services:
       - psql
 volumes:
   psqldata:
+    # driver: local
